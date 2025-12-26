@@ -20,5 +20,5 @@ def test_upload_endpoint_processes_pdf():
     )
 
     assert response.status_code == 200
-    assert "Extracted Products" in response.text
+    assert "Catalog Pages" in response.text
     assert "Sample Product" in response.text

@@ -53,22 +53,29 @@ def parse_products(
 
         lines = _extract_lines(text)
         name = lines[0] if lines else f"Page {page_number}"
-        description_lines = lines[1:] if len(lines) > 1 else []
-        description = "\n".join(description_lines)
+        description = text.strip()
         price = extract_price(text)
-        images = page_images.get(page_number, [])
+        embedded_images = page_images.get(page_number, []) or None
         page_preview_url = page_previews.get(page_number)
-        image_url = images[0] if images else page_preview_url
-        specs = _extract_specs(description_lines)
+        page_image_url = page_preview_url or (embedded_images[0] if embedded_images else None)
+        specs = _extract_specs(lines)
+
+        if not page_image_url:
+            logger.warning("Missing page render for page %s", page_number)
+            continue
 
         products.append(
             Product(
                 name=name or f"Page {page_number}",
                 description=description or "",
+                page_number=page_number,
+                page_image_url=page_image_url,
+                extracted_text=description or None,
                 price=price,
-                image_url=image_url,
+                image_url=page_image_url,
                 page_preview_url=page_preview_url,
                 specs=specs or None,
+                embedded_images=embedded_images,
             )
         )
 

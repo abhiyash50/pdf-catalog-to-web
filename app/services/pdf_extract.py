@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 
 import fitz  # PyMuPDF
 
+from app.config import settings
 from app.services.image_export import export_page_images, render_page_preview
 from app.services.storage import prepare_extraction_dirs
 
@@ -36,12 +37,18 @@ def extract_from_pdf(pdf_path: Path, job_id: str) -> ExtractionResult:
 
     for page in doc:
         page_number = page.number + 1
-        text = (page.get_text() or "").strip()
+        text = (page.get_text("text") or "").strip()
         text_blocks.append((page_number, text))
         images = export_page_images(page, job_id, upload_dir)
         if images:
             page_images[page_number] = [img.web_path for img in images]
-        preview = render_page_preview(page, job_id, upload_dir)
+        preview = render_page_preview(
+            page,
+            job_id,
+            upload_dir,
+            scale=settings.render_scale,
+            fmt=settings.render_format,
+        )
         page_previews[page_number] = preview.web_path
 
     logger.info(

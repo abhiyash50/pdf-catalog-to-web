@@ -2,60 +2,60 @@
 {% block content %}
 <section class="results">
     <div class="results-header">
-        <h2>Extracted Products</h2>
-        <p>Click an image to zoom or open the full page for the highest detail.</p>
+        <h2>Catalog Pages</h2>
+        <p>Rendered directly from your PDF. Click to zoom or open in a new tab for full resolution.</p>
     </div>
     {% if products and products|length > 0 %}
         {% for product in products %}
         <article class="product-detail-card">
             <div class="product-media">
-                {% if product.image_url or product.page_preview_url %}
+                {% if product.page_image_url %}
                 <div class="media-frame">
                     <img
                         loading="lazy"
                         class="zoomable-image"
-                        src="{{ product.image_url or product.page_preview_url }}"
-                        alt="{{ product.name }}"
-                        data-full-image="{{ product.page_preview_url or product.image_url }}"
+                        src="{{ product.page_image_url }}"
+                        alt="{{ product.name }} page {{ product.page_number }}"
+                        data-full-image="{{ product.page_image_url }}"
                     >
                 </div>
                 <div class="media-actions">
-                    {% if product.image_url %}
-                    <a href="{{ product.image_url }}" target="_blank" rel="noopener">Open image in new tab</a>
-                    {% endif %}
-                    {% if product.page_preview_url %}
-                    <a class="button ghost" href="{{ product.page_preview_url }}" target="_blank" rel="noopener">View full page (zoom)</a>
+                    <a class="button ghost" href="{{ product.page_image_url }}" target="_blank" rel="noopener">Open page in new tab</a>
+                    {% if product.page_preview_url and product.page_preview_url != product.page_image_url %}
+                    <a href="{{ product.page_preview_url }}" target="_blank" rel="noopener">Alternate preview</a>
                     {% endif %}
                 </div>
+                {% if product.embedded_images %}
+                <div class="embedded-gallery">
+                    <p class="muted">Embedded images (optional assets):</p>
+                    <div class="thumbnail-grid">
+                        {% for thumb in product.embedded_images %}
+                        <a href="{{ thumb }}" target="_blank" rel="noopener" class="thumbnail">
+                            <img src="{{ thumb }}" alt="Embedded asset from page {{ product.page_number }}" loading="lazy">
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
                 {% else %}
                 <div class="media-frame placeholder">No image available</div>
                 {% endif %}
             </div>
             <div class="product-info">
                 <div class="product-heading">
-                    <h3>{{ product.name }}</h3>
+                    <h3>{{ product.name }} (Page {{ product.page_number }})</h3>
                     {% if product.price %}
                     <p class="price">{{ product.price }}</p>
                     {% endif %}
                 </div>
-                {% if product.specs %}
-                <dl class="spec-list">
-                    {% for label, value in product.specs %}
-                    <div class="spec-row">
-                        <dt>{{ label }}</dt>
-                        <dd>{{ value }}</dd>
-                    </div>
-                    {% endfor %}
-                </dl>
-                {% endif %}
-                {% if product.description %}
                 <div class="description-block">
-                    <pre class="description-text" data-full-text="{{ product.description }}">{{ product.description }}</pre>
+                    {% if product.extracted_text %}
+                    <pre class="description-text" data-full-text="{{ product.extracted_text }}">{{ product.extracted_text }}</pre>
                     <button type="button" class="toggle-description" aria-label="Toggle description">Show more</button>
+                    {% else %}
+                    <p class="muted">No extracted text for this page.</p>
+                    {% endif %}
                 </div>
-                {% else %}
-                <p class="muted">No description provided for this page.</p>
-                {% endif %}
             </div>
         </article>
         {% endfor %}

@@ -27,5 +27,5 @@ def test_parsed_products_store_web_paths():
         {1: "/static/uploads/job789/pages/page_1.png"},
     )
 
-    assert products[0].image_url == web_path
-    assert products[0].image_url.startswith("/static/uploads/")
+    assert products[0].page_image_url.startswith("/static/uploads/")
+    assert products[0].image_url == products[0].page_image_url

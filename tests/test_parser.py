@@ -36,7 +36,7 @@ def test_parse_products_creates_entries():
     assert products[0].name == "Product Alpha"
     assert "great item" in products[0].description
     assert products[0].price is not None
-    assert products[0].image_url is not None
+    assert products[0].page_image_url is not None
     assert products[1].price == "$49.99"
     assert products[1].name == "Beta Gadget"
 
