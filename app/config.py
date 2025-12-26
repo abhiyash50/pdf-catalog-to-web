@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     log_level: str = Field("INFO", validation_alias="LOG_LEVEL")
     env: str = Field("production", validation_alias="ENV")
 
-    static_dir: Path = Field(default_factory=lambda: DEFAULT_STATIC_DIR)
+    static_dir: Path = Field(default_factory=lambda: DEFAULT_STATIC_DIR, validation_alias="STATIC_DIR")
     template_dir: Path = Field(default_factory=lambda: DEFAULT_TEMPLATE_DIR)
     tmp_dir: Path = Field(default_factory=lambda: DEFAULT_TMP_DIR, validation_alias="TMP_DIR")
     extracted_dir: Path = Field(default_factory=lambda: DEFAULT_EXTRACTED_DIR, validation_alias="EXTRACTED_DIR")
