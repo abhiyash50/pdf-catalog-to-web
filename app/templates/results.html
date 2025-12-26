@@ -1,149 +1,238 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="results">
-    <div class="results-header">
-        <h2>Catalog Pages</h2>
-        <p>Rendered directly from your PDF. Click to zoom or open in a new tab for full resolution.</p>
-    </div>
-    {% if products and products|length > 0 %}
-        {% for product in products %}
-        <article class="product-detail-card">
-            <div class="product-media">
-                {% if product.page_image_url %}
-                <div class="media-frame">
-                    <img
-                        loading="lazy"
-                        class="zoomable-image"
-                        src="{{ product.page_image_url }}"
-                        alt="{{ product.name }} page {{ product.page_number }}"
-                        data-full-image="{{ product.page_image_url }}"
-                    >
-                </div>
-                <div class="media-actions">
-                    <a class="button ghost" href="{{ product.page_image_url }}" target="_blank" rel="noopener">Open page in new tab</a>
-                    {% if product.page_preview_url and product.page_preview_url != product.page_image_url %}
-                    <a href="{{ product.page_preview_url }}" target="_blank" rel="noopener">Alternate preview</a>
-                    {% endif %}
-                </div>
-                {% if product.embedded_images %}
-                <div class="embedded-gallery">
-                    <p class="muted">Embedded images (optional assets):</p>
-                    <div class="thumbnail-grid">
-                        {% for thumb in product.embedded_images %}
-                        <a href="{{ thumb }}" target="_blank" rel="noopener" class="thumbnail">
-                            <img src="{{ thumb }}" alt="Embedded asset from page {{ product.page_number }}" loading="lazy">
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
+  <header class="results-header">
+    <h2>Catalog Results</h2>
+    <p class="muted">
+      Pages rendered from your PDF. Click the main page image to zoom, or open in a new tab.
+    </p>
+  </header>
+
+  {% if products and products|length > 0 %}
+    <div class="product-list">
+      {% for product in products %}
+        <article class="product-card">
+
+          <!-- LEFT: MEDIA -->
+          <aside class="product-card__media">
+            <div class="media-header">
+              <span class="badge">Page {{ product.page_number }}</span>
+              {% if product.name %}
+                <span class="badge ghost">Item</span>
+              {% endif %}
+            </div>
+
+            {% if product.page_image_url %}
+              <div class="media-frame">
+                <img
+                  loading="lazy"
+                  class="zoomable-image"
+                  src="{{ product.page_image_url }}"
+                  alt="Page {{ product.page_number }} preview"
+                  data-full-image="{{ product.page_image_url }}"
+                />
+              </div>
+
+              <div class="media-actions">
+                <a class="button ghost" href="{{ product.page_image_url }}" target="_blank" rel="noopener">
+                  Open full page
+                </a>
+                {% if product.page_preview_url and product.page_preview_url != product.page_image_url %}
+                  <a class="link" href="{{ product.page_preview_url }}" target="_blank" rel="noopener">
+                    Open preview
+                  </a>
                 {% endif %}
+              </div>
+
+              {% if product.embedded_images %}
+                <section class="embedded-gallery">
+                  <h4 class="section-title">Embedded Images</h4>
+                  <div class="thumbnail-grid">
+                    {% for thumb in product.embedded_images %}
+                      <a href="{{ thumb }}" target="_blank" rel="noopener" class="thumbnail" title="Open image">
+                        <img src="{{ thumb }}" alt="Embedded image from page {{ product.page_number }}" loading="lazy">
+                      </a>
+                    {% endfor %}
+                  </div>
+                </section>
+              {% endif %}
+
+            {% else %}
+              <div class="media-frame placeholder">
+                <p class="muted">No page image available</p>
+              </div>
+            {% endif %}
+          </aside>
+
+          <!-- RIGHT: DETAILS -->
+          <section class="product-card__details">
+            <div class="product-title-row">
+              <div>
+                <h3 class="product-title">
+                  {{ product.name if product.name else "Untitled Item" }}
+                </h3>
+                <p class="muted small">
+                  Source: Page {{ product.page_number }}
+                </p>
+              </div>
+
+              {% if product.price %}
+                <div class="price-pill">
+                  <span class="label">Price</span>
+                  <span class="value">{{ product.price }}</span>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="info-grid">
+              <div class="info-block">
+                <h4 class="section-title">Description</h4>
+                {% if product.description %}
+                  <p class="description">{{ product.description }}</p>
                 {% else %}
-                <div class="media-frame placeholder">No image available</div>
+                  <p class="muted">No description extracted.</p>
                 {% endif %}
+              </div>
+
+              <div class="info-block">
+                <h4 class="section-title">Additional Details</h4>
+                <dl class="kv">
+                  <div class="kv-row">
+                    <dt>Page Number</dt>
+                    <dd>{{ product.page_number }}</dd>
+                  </div>
+
+                  {% if product.price_value %}
+                  <div class="kv-row">
+                    <dt>Price (Numeric)</dt>
+                    <dd>{{ product.price_value }}</dd>
+                  </div>
+                  {% endif %}
+
+                  {% if product.price_text %}
+                  <div class="kv-row">
+                    <dt>Price Text</dt>
+                    <dd>{{ product.price_text }}</dd>
+                  </div>
+                  {% endif %}
+                </dl>
+              </div>
             </div>
-            <div class="product-info">
-                <div class="product-heading">
-                    <h3>{{ product.name }} (Page {{ product.page_number }})</h3>
-                    {% if product.price %}
-                    <p class="price">{{ product.price }}</p>
-                    {% endif %}
-                </div>
-                <div class="description-block">
-                    {% if product.extracted_text %}
-                    <pre class="description-text" data-full-text="{{ product.extracted_text }}">{{ product.extracted_text }}</pre>
-                    <button type="button" class="toggle-description" aria-label="Toggle description">Show more</button>
-                    {% else %}
-                    <p class="muted">No extracted text for this page.</p>
-                    {% endif %}
-                </div>
+
+            <div class="info-block">
+              <h4 class="section-title">Extracted Text (Raw)</h4>
+              {% if product.extracted_text %}
+                <pre class="description-text" data-full-text="{{ product.extracted_text }}">{{ product.extracted_text }}</pre>
+                <button type="button" class="toggle-description button ghost small-btn" aria-label="Toggle extracted text">
+                  Show more
+                </button>
+              {% else %}
+                <p class="muted">No extracted text for this page.</p>
+              {% endif %}
             </div>
+
+          </section>
         </article>
-        {% endfor %}
-    {% else %}
-        <p>No products found in this catalog.</p>
-    {% endif %}
-    <div class="actions">
-        <a class="button" href="/">Upload another file</a>
+      {% endfor %}
     </div>
+
+  {% else %}
+    <div class="empty-state">
+      <h3>No products found</h3>
+      <p class="muted">Try another PDF or adjust the extraction rules.</p>
+    </div>
+  {% endif %}
+
+  <footer class="actions">
+    <a class="button" href="/">Upload another file</a>
+  </footer>
 </section>
 
+<!-- IMAGE MODAL -->
 <div id="image-modal" class="image-modal" aria-hidden="true">
-    <div class="image-modal__backdrop" data-close-modal></div>
-    <div class="image-modal__dialog">
-        <img src="" alt="Full page preview" loading="lazy">
-    </div>
+  <div class="image-modal__backdrop" data-close-modal></div>
+  <div class="image-modal__dialog">
+    <img src="" alt="Full page preview" loading="lazy">
+  </div>
 </div>
 
 <script>
-    (function() {
-        const modal = document.getElementById('image-modal');
-        const modalImg = modal ? modal.querySelector('img') : null;
-        const body = document.body;
+  (function() {
+    const modal = document.getElementById('image-modal');
+    const modalImg = modal ? modal.querySelector('img') : null;
+    const body = document.body;
 
-        function openModal(src) {
-            if (!modal || !modalImg) return;
-            modalImg.src = src;
-            modal.classList.add('open');
-            modal.setAttribute('aria-hidden', 'false');
-            body.classList.add('no-scroll');
+    function openModal(src) {
+      if (!modal || !modalImg) return;
+      modalImg.src = src;
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      body.classList.add('no-scroll');
+    }
+
+    function closeModal() {
+      if (!modal || !modalImg) return;
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      modalImg.src = '';
+      body.classList.remove('no-scroll');
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+
+      if (target instanceof HTMLElement && target.closest('[data-close-modal]')) {
+        closeModal();
+        return;
+      }
+
+      if (target instanceof HTMLImageElement && target.classList.contains('zoomable-image')) {
+        const full = target.dataset.fullImage || target.src;
+        openModal(full);
+        return;
+      }
+
+      if (target instanceof HTMLElement && target.classList.contains('toggle-description')) {
+        const pre = target.previousElementSibling;
+        if (!(pre instanceof HTMLElement)) return;
+
+        const fullText = pre.dataset.fullText || pre.textContent || '';
+        const maxChars = 900;
+
+        const isCollapsed = pre.dataset.state !== 'expanded';
+        if (isCollapsed) {
+          pre.textContent = fullText;
+          pre.dataset.state = 'expanded';
+          target.textContent = 'Show less';
+        } else {
+          pre.textContent = fullText.length > maxChars ? fullText.slice(0, maxChars) + '…' : fullText;
+          pre.dataset.state = 'collapsed';
+          target.textContent = 'Show more';
         }
+      }
+    });
 
-        function closeModal() {
-            if (!modal || !modalImg) return;
-            modal.classList.remove('open');
-            modal.setAttribute('aria-hidden', 'true');
-            modalImg.src = '';
-            body.classList.remove('no-scroll');
-        }
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && modal?.classList.contains('open')) closeModal();
+    });
 
-        document.addEventListener('click', (event) => {
-            const target = event.target;
-            if (target instanceof HTMLElement && target.closest('[data-close-modal]')) {
-                closeModal();
-            }
-            if (target instanceof HTMLImageElement && target.classList.contains('zoomable-image')) {
-                const full = target.dataset.fullImage || target.src;
-                openModal(full);
-            }
-            if (target instanceof HTMLElement && target.classList.contains('toggle-description')) {
-                const pre = target.previousElementSibling;
-                if (!(pre instanceof HTMLElement)) return;
-                const fullText = pre.dataset.fullText || pre.textContent || '';
-                const maxChars = 800;
-                const isCollapsed = pre.dataset.state !== 'expanded';
-                if (isCollapsed) {
-                    pre.textContent = fullText;
-                    pre.dataset.state = 'expanded';
-                    target.textContent = 'Show less';
-                } else {
-                    const truncated = fullText.length > maxChars ? fullText.slice(0, maxChars) + '…' : fullText;
-                    pre.textContent = truncated;
-                    pre.dataset.state = 'collapsed';
-                    target.textContent = 'Show more';
-                }
-            }
-        });
+    document.querySelectorAll('.description-text').forEach((pre) => {
+      const fullText = pre.dataset.fullText || pre.textContent || '';
+      const toggle = pre.nextElementSibling;
+      const maxChars = 900;
 
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && modal?.classList.contains('open')) {
-                closeModal();
-            }
-        });
+      if (!(toggle instanceof HTMLElement)) return;
 
-        document.querySelectorAll('.description-text').forEach((pre) => {
-            const fullText = pre.dataset.fullText || pre.textContent || '';
-            const toggle = pre.nextElementSibling;
-            const maxChars = 800;
-            if (!(toggle instanceof HTMLElement)) return;
-            if (fullText.length <= maxChars) {
-                toggle.remove();
-                pre.textContent = fullText;
-                return;
-            }
-            pre.textContent = fullText.slice(0, maxChars) + '…';
-            pre.dataset.state = 'collapsed';
-            toggle.textContent = 'Show more';
-        });
-    })();
+      if (fullText.length <= maxChars) {
+        toggle.remove();
+        pre.textContent = fullText;
+        return;
+      }
+
+      pre.textContent = fullText.slice(0, maxChars) + '…';
+      pre.dataset.state = 'collapsed';
+      toggle.textContent = 'Show more';
+    });
+  })();
 </script>
 {% endblock %}
