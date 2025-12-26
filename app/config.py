@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     tmp_dir: Path = Field(default_factory=lambda: DEFAULT_TMP_DIR, validation_alias="TMP_DIR")
     extracted_dir: Path = Field(default_factory=lambda: DEFAULT_EXTRACTED_DIR, validation_alias="EXTRACTED_DIR")
     upload_static_dir: Path = Field(default_factory=lambda: DEFAULT_UPLOAD_DIR, validation_alias="UPLOAD_DIR")
+    render_scale: float = Field(2.0, validation_alias="RENDER_SCALE")
+    render_format: str = Field("png", validation_alias="RENDER_FORMAT")
 
     @property
     def max_upload_size_mb(self) -> int:

@@ -73,15 +73,20 @@ def _export_original_image(page: fitz.Page, xref: int, output_dir: Path, idx: in
 
 
 def render_page_preview(
-    page: fitz.Page, job_id: str, output_dir: Path, scale: float = 2.0
+    page: fitz.Page,
+    job_id: str,
+    output_dir: Path,
+    scale: float = 2.0,
+    fmt: str = "png",
 ) -> ExportedImage:
-    """Render a high-resolution PNG preview for a given page."""
+    """Render a high-resolution preview for a given page."""
 
     pages_dir = output_dir / "pages"
     pages_dir.mkdir(parents=True, exist_ok=True)
     matrix = fitz.Matrix(scale, scale)
     pix = page.get_pixmap(matrix=matrix, alpha=False)
-    filename = f"page_{page.number + 1}.png"
+    ext = fmt.lower() if fmt else "png"
+    filename = f"page_{page.number + 1}.{ext}"
     file_path = pages_dir / filename
     pix.save(file_path)
     pix = None
