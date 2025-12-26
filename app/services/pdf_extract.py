@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Dict, List, Tuple
-import logging
 
 import fitz  # PyMuPDF
 
@@ -21,18 +21,22 @@ class ExtractionResult:
 
 def extract_from_pdf(pdf_path: Path, job_id: str) -> ExtractionResult:
     extraction_dir, upload_dir = prepare_extraction_dirs(job_id)
-    doc = fitz.open(pdf_path)
     logger.info("Starting extraction for %s", pdf_path)
-    text_blocks: List[str] = []
+    doc = fitz.open(pdf_path)
+    text_blocks: List[Tuple[int, str]] = []
     page_images: Dict[int, List[str]] = {}
 
     for page in doc:
-        text = page.get_text().strip()
-        if text:
-            text_blocks.append(text)
+        page_number = page.number + 1
+        text = (page.get_text() or "").strip()
+        text_blocks.append((page_number, text))
         images = export_page_images(page, upload_dir)
         if images:
-            page_images[page.number] = images
+            page_images[page_number] = images
 
-    logger.info("Extracted %d text blocks and %d pages with images", len(text_blocks), len(page_images))
+    logger.info(
+        "Extracted %d pages of text and %d pages with images",
+        len(text_blocks),
+        len(page_images),
+    )
     return ExtractionResult(text_blocks=text_blocks, page_images=page_images, job_id=job_id)

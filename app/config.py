@@ -47,7 +47,12 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # ensure directories exist at import time for convenience
-for path in [settings.tmp_dir, settings.extracted_dir, settings.upload_static_dir]:
+for path in [
+    settings.static_dir,
+    settings.upload_static_dir,
+    settings.tmp_dir,
+    settings.extracted_dir,
+]:
     try:
         os.makedirs(path, exist_ok=True)
     except OSError:
