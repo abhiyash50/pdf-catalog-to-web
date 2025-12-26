@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 from fastapi import APIRouter, File, Request, UploadFile
 from fastapi.responses import HTMLResponse
@@ -54,12 +53,6 @@ async def upload_pdf(request: Request, file: UploadFile = File(...)):
         pdf_path, job_id = storage.save_upload(file_bytes, filename)
         extraction = pdf_extract.extract_from_pdf(pdf_path, job_id)
         products = product_parser.parse_products(extraction.text_blocks, extraction.page_images)
-
-        for product in products:
-            if product.image_path:
-                product.image_path = "/static/" + str(
-                    Path(product.image_path).relative_to(settings.static_dir)
-                )
 
         return template.TemplateResponse(
             "results.html",

@@ -30,9 +30,9 @@ def extract_from_pdf(pdf_path: Path, job_id: str) -> ExtractionResult:
         page_number = page.number + 1
         text = (page.get_text() or "").strip()
         text_blocks.append((page_number, text))
-        images = export_page_images(page, upload_dir)
+        images = export_page_images(page, job_id, upload_dir)
         if images:
-            page_images[page_number] = images
+            page_images[page_number] = [img.web_path for img in images]
 
     logger.info(
         "Extracted %d pages of text and %d pages with images",
