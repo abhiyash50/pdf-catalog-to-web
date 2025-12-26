@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+    <h2>Upload PDF Catalog</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
+        <label for="file">Choose a PDF file (max {{ max_size_mb if max_size_mb else 25 }}MB)</label>
+        <input type="file" id="file" name="file" accept="application/pdf" required>
+        <button type="submit">Upload</button>
+    </form>
+</section>
+{% endblock %}

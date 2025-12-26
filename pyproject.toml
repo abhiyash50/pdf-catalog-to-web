@@ -1,0 +1,10 @@
+[project]
+name = "pdf-catalog-to-web"
+version = "0.1.0"
+description = "Convert PDF catalogs to a web product grid"
+authors = [{name = "Auto Generated"}]
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Extracted Products</h2>
+    {% if products and products|length > 0 %}
+    <div class="grid">
+        {% for product in products %}
+        <div class="product-card">
+            {% if product.image_path %}
+            <div class="image-wrapper">
+                <img src="{{ product.image_path }}" alt="{{ product.name }}">
+            </div>
+            {% else %}
+            <div class="image-wrapper placeholder">No image</div>
+            {% endif %}
+            <div class="product-content">
+                <h3>{{ product.name }}</h3>
+                <p class="description">{{ product.description }}</p>
+                {% if product.price %}
+                <p class="price">{{ product.price }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No products found in this catalog.</p>
+    {% endif %}
+    <div class="actions">
+        <a class="button" href="/">Upload another file</a>
+    </div>
+</section>
+{% endblock %}
