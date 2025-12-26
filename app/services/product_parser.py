@@ -13,12 +13,6 @@ PRICE_PATTERN = re.compile(
 )
 
 
-def split_text_into_blocks(text: str) -> List[str]:
-    blocks = [block.strip() for block in re.split(r"\n{2,}", text) if block.strip()]
-    logger.debug("Split text into %d blocks", len(blocks))
-    return blocks
-
-
 def extract_price(text: str) -> Optional[str]:
     match = PRICE_PATTERN.search(text)
     if match:
@@ -26,9 +20,28 @@ def extract_price(text: str) -> Optional[str]:
     return None
 
 
+def _extract_lines(text: str) -> List[str]:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    logger.debug("Split text into %d lines", len(lines))
+    return lines
+
+
+def _extract_specs(lines: Sequence[str]) -> List[Tuple[str, str]]:
+    specs: List[Tuple[str, str]] = []
+    for line in lines:
+        if ":" in line:
+            key, value = line.split(":", 1)
+            key = key.strip()
+            value = value.strip()
+            if key and value:
+                specs.append((key, value))
+    return specs
+
+
 def parse_products(
     text_blocks: Sequence[Union[str, Tuple[int, str]]],
     page_images: Dict[int, List[str]],
+    page_previews: Dict[int, str],
 ) -> List[Product]:
     products: List[Product] = []
 
@@ -38,20 +51,24 @@ def parse_products(
         else:
             page_number, text = idx + 1, block
 
-        paragraphs = split_text_into_blocks(text)
-        name = paragraphs[0] if paragraphs else f"Page {page_number}"
-        description = " ".join(paragraphs[1:]) if len(paragraphs) > 1 else ""
-        description = description[:600]
+        lines = _extract_lines(text)
+        name = lines[0] if lines else f"Page {page_number}"
+        description_lines = lines[1:] if len(lines) > 1 else []
+        description = "\n".join(description_lines)
         price = extract_price(text)
         images = page_images.get(page_number, [])
-        image_path = images[0] if images else None
+        page_preview_url = page_previews.get(page_number)
+        image_url = images[0] if images else page_preview_url
+        specs = _extract_specs(description_lines)
 
         products.append(
             Product(
                 name=name or f"Page {page_number}",
                 description=description or "",
                 price=price,
-                image_path=image_path,
+                image_url=image_url,
+                page_preview_url=page_preview_url,
+                specs=specs or None,
             )
         )
 
@@ -61,7 +78,6 @@ def parse_products(
 
 __all__ = [
     "PRICE_PATTERN",
-    "split_text_into_blocks",
     "extract_price",
     "parse_products",
 ]

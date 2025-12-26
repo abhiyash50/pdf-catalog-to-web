@@ -52,7 +52,9 @@ async def upload_pdf(request: Request, file: UploadFile = File(...)):
 
         pdf_path, job_id = storage.save_upload(file_bytes, filename)
         extraction = pdf_extract.extract_from_pdf(pdf_path, job_id)
-        products = product_parser.parse_products(extraction.text_blocks, extraction.page_images)
+        products = product_parser.parse_products(
+            extraction.text_blocks, extraction.page_images, extraction.page_previews
+        )
 
         return template.TemplateResponse(
             "results.html",

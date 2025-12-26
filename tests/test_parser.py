@@ -30,18 +30,19 @@ def test_parse_products_creates_entries():
             1: ["/static/uploads/job/img1.png"],
             2: ["/static/uploads/job/img2.png"],
         },
+        {1: "/static/uploads/job/pages/page_1.png", 2: "/static/uploads/job/pages/page_2.png"},
     )
     assert len(products) == 2
     assert products[0].name == "Product Alpha"
     assert "great item" in products[0].description
     assert products[0].price is not None
-    assert products[0].image_path is not None
+    assert products[0].image_url is not None
     assert products[1].price == "$49.99"
     assert products[1].name == "Beta Gadget"
 
 
 def test_parse_products_handles_japanese_text():
     japanese_block = (3, "商品名：テスト\n\nこれはサンプルの説明です。価格は12,000円です。")
-    products = parse_products([japanese_block], {})
+    products = parse_products([japanese_block], {}, {3: "/static/uploads/job/pages/page_3.png"})
     assert products[0].name.startswith("商品名")
     assert products[0].price == "12,000円"
