@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from app.models import Product
 
 logger = logging.getLogger(__name__)
 
 PRICE_PATTERN = re.compile(
-    r"(?i)(?:rs\.?|inr|₹|\$|€|usd)?\s*([0-9]{1,3}(?:[, ]?[0-9]{3})*(?:\.[0-9]{2})?)"
+    r"(?i)(?:rs\.?|inr|₹|¥|円|usd|eur|cad|aud|\$|€)?\s*([0-9]+(?:[, ]?[0-9]{3})*(?:\.[0-9]{1,2})?)"
 )
 
 
@@ -26,34 +26,37 @@ def extract_price(text: str) -> Optional[str]:
     return None
 
 
-def parse_products(text_blocks: List[str], page_images: Dict[int, List[str]]) -> List[Product]:
+def parse_products(
+    text_blocks: Sequence[Union[str, Tuple[int, str]]],
+    page_images: Dict[int, List[str]],
+) -> List[Product]:
     products: List[Product] = []
-    image_lookup = _flatten_images(page_images)
-    image_iter = iter(image_lookup)
 
-    for block in text_blocks:
-        paragraphs = split_text_into_blocks(block)
-        if not paragraphs:
-            continue
-        name = paragraphs[0]
+    for idx, block in enumerate(text_blocks):
+        if isinstance(block, tuple):
+            page_number, text = block
+        else:
+            page_number, text = idx + 1, block
+
+        paragraphs = split_text_into_blocks(text)
+        name = paragraphs[0] if paragraphs else f"Page {page_number}"
         description = " ".join(paragraphs[1:]) if len(paragraphs) > 1 else ""
-        price = extract_price(block)
-        try:
-            image_path = next(image_iter)
-        except StopIteration:
-            image_path = None
-        products.append(Product(name=name, description=description, price=price, image_path=image_path))
+        description = description[:600]
+        price = extract_price(text)
+        images = page_images.get(page_number, [])
+        image_path = images[0] if images else None
+
+        products.append(
+            Product(
+                name=name or f"Page {page_number}",
+                description=description or "",
+                price=price,
+                image_path=image_path,
+            )
+        )
 
     logger.info("Parsed %d products", len(products))
     return products
-
-
-def _flatten_images(page_images: Dict[int, List[str]]) -> List[str]:
-    ordered_pages = sorted(page_images.keys())
-    images: List[str] = []
-    for page in ordered_pages:
-        images.extend(page_images[page])
-    return images
 
 
 __all__ = [

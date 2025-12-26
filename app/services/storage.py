@@ -17,7 +17,8 @@ def save_upload(file_bytes: bytes, filename: str) -> Tuple[Path, str]:
     """Save uploaded PDF to tmp directory and return path and job id."""
     ensure_directories()
     job_id = uuid.uuid4().hex
-    tmp_path = settings.tmp_dir / f"{job_id}_{filename}"
+    safe_name = Path(filename).name or "upload.pdf"
+    tmp_path = settings.tmp_dir / f"{job_id}_{safe_name}"
     tmp_path.write_bytes(file_bytes)
     return tmp_path, job_id
 
