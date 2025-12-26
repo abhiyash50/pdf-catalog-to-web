@@ -1,28 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
-<section>
-    <h2>Extracted Products</h2>
+<section class="results">
+    <div class="results-header">
+        <h2>Extracted Products</h2>
+        <p>Click an image to zoom or open the full page for the highest detail.</p>
+    </div>
     {% if products and products|length > 0 %}
-    <div class="grid">
         {% for product in products %}
-        <div class="product-card">
-            {% if product.image_path %}
-            <div class="image-wrapper">
-                <img src="{{ product.image_path }}" alt="{{ product.name }}">
-            </div>
-            {% else %}
-            <div class="image-wrapper placeholder">No image</div>
-            {% endif %}
-            <div class="product-content">
-                <h3>{{ product.name }}</h3>
-                <p class="description">{{ product.description }}</p>
-                {% if product.price %}
-                <p class="price">{{ product.price }}</p>
+        <article class="product-detail-card">
+            <div class="product-media">
+                {% if product.image_url or product.page_preview_url %}
+                <div class="media-frame">
+                    <img
+                        loading="lazy"
+                        class="zoomable-image"
+                        src="{{ product.image_url or product.page_preview_url }}"
+                        alt="{{ product.name }}"
+                        data-full-image="{{ product.page_preview_url or product.image_url }}"
+                    >
+                </div>
+                <div class="media-actions">
+                    {% if product.image_url %}
+                    <a href="{{ product.image_url }}" target="_blank" rel="noopener">Open image in new tab</a>
+                    {% endif %}
+                    {% if product.page_preview_url %}
+                    <a class="button ghost" href="{{ product.page_preview_url }}" target="_blank" rel="noopener">View full page (zoom)</a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="media-frame placeholder">No image available</div>
                 {% endif %}
             </div>
-        </div>
+            <div class="product-info">
+                <div class="product-heading">
+                    <h3>{{ product.name }}</h3>
+                    {% if product.price %}
+                    <p class="price">{{ product.price }}</p>
+                    {% endif %}
+                </div>
+                {% if product.specs %}
+                <dl class="spec-list">
+                    {% for label, value in product.specs %}
+                    <div class="spec-row">
+                        <dt>{{ label }}</dt>
+                        <dd>{{ value }}</dd>
+                    </div>
+                    {% endfor %}
+                </dl>
+                {% endif %}
+                {% if product.description %}
+                <div class="description-block">
+                    <pre class="description-text" data-full-text="{{ product.description }}">{{ product.description }}</pre>
+                    <button type="button" class="toggle-description" aria-label="Toggle description">Show more</button>
+                </div>
+                {% else %}
+                <p class="muted">No description provided for this page.</p>
+                {% endif %}
+            </div>
+        </article>
         {% endfor %}
-    </div>
     {% else %}
         <p>No products found in this catalog.</p>
     {% endif %}
@@ -30,4 +66,84 @@
         <a class="button" href="/">Upload another file</a>
     </div>
 </section>
+
+<div id="image-modal" class="image-modal" aria-hidden="true">
+    <div class="image-modal__backdrop" data-close-modal></div>
+    <div class="image-modal__dialog">
+        <img src="" alt="Full page preview" loading="lazy">
+    </div>
+</div>
+
+<script>
+    (function() {
+        const modal = document.getElementById('image-modal');
+        const modalImg = modal ? modal.querySelector('img') : null;
+        const body = document.body;
+
+        function openModal(src) {
+            if (!modal || !modalImg) return;
+            modalImg.src = src;
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            body.classList.add('no-scroll');
+        }
+
+        function closeModal() {
+            if (!modal || !modalImg) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            modalImg.src = '';
+            body.classList.remove('no-scroll');
+        }
+
+        document.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target instanceof HTMLElement && target.closest('[data-close-modal]')) {
+                closeModal();
+            }
+            if (target instanceof HTMLImageElement && target.classList.contains('zoomable-image')) {
+                const full = target.dataset.fullImage || target.src;
+                openModal(full);
+            }
+            if (target instanceof HTMLElement && target.classList.contains('toggle-description')) {
+                const pre = target.previousElementSibling;
+                if (!(pre instanceof HTMLElement)) return;
+                const fullText = pre.dataset.fullText || pre.textContent || '';
+                const maxChars = 800;
+                const isCollapsed = pre.dataset.state !== 'expanded';
+                if (isCollapsed) {
+                    pre.textContent = fullText;
+                    pre.dataset.state = 'expanded';
+                    target.textContent = 'Show less';
+                } else {
+                    const truncated = fullText.length > maxChars ? fullText.slice(0, maxChars) + '…' : fullText;
+                    pre.textContent = truncated;
+                    pre.dataset.state = 'collapsed';
+                    target.textContent = 'Show more';
+                }
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modal?.classList.contains('open')) {
+                closeModal();
+            }
+        });
+
+        document.querySelectorAll('.description-text').forEach((pre) => {
+            const fullText = pre.dataset.fullText || pre.textContent || '';
+            const toggle = pre.nextElementSibling;
+            const maxChars = 800;
+            if (!(toggle instanceof HTMLElement)) return;
+            if (fullText.length <= maxChars) {
+                toggle.remove();
+                pre.textContent = fullText;
+                return;
+            }
+            pre.textContent = fullText.slice(0, maxChars) + '…';
+            pre.dataset.state = 'collapsed';
+            toggle.textContent = 'Show more';
+        });
+    })();
+</script>
 {% endblock %}

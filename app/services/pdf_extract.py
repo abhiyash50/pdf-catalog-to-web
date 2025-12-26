@@ -6,16 +6,23 @@ from typing import Dict, List, Tuple
 
 import fitz  # PyMuPDF
 
-from app.services.image_export import export_page_images
+from app.services.image_export import export_page_images, render_page_preview
 from app.services.storage import prepare_extraction_dirs
 
 logger = logging.getLogger(__name__)
 
 
 class ExtractionResult:
-    def __init__(self, text_blocks: List[str], page_images: Dict[int, List[str]], job_id: str):
+    def __init__(
+        self,
+        text_blocks: List[str],
+        page_images: Dict[int, List[str]],
+        page_previews: Dict[int, str],
+        job_id: str,
+    ):
         self.text_blocks = text_blocks
         self.page_images = page_images
+        self.page_previews = page_previews
         self.job_id = job_id
 
 
@@ -25,6 +32,7 @@ def extract_from_pdf(pdf_path: Path, job_id: str) -> ExtractionResult:
     doc = fitz.open(pdf_path)
     text_blocks: List[Tuple[int, str]] = []
     page_images: Dict[int, List[str]] = {}
+    page_previews: Dict[int, str] = {}
 
     for page in doc:
         page_number = page.number + 1
@@ -33,10 +41,14 @@ def extract_from_pdf(pdf_path: Path, job_id: str) -> ExtractionResult:
         images = export_page_images(page, job_id, upload_dir)
         if images:
             page_images[page_number] = [img.web_path for img in images]
+        preview = render_page_preview(page, job_id, upload_dir)
+        page_previews[page_number] = preview.web_path
 
     logger.info(
         "Extracted %d pages of text and %d pages with images",
         len(text_blocks),
         len(page_images),
     )
-    return ExtractionResult(text_blocks=text_blocks, page_images=page_images, job_id=job_id)
+    return ExtractionResult(
+        text_blocks=text_blocks, page_images=page_images, page_previews=page_previews, job_id=job_id
+    )

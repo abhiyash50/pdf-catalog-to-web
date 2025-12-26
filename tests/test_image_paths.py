@@ -21,7 +21,11 @@ def test_parsed_products_store_web_paths():
     job_id = "job789"
     web_path = build_web_image_path(job_id, "page1_img1.png")
 
-    products = product_parser.parse_products([(1, "Widget\n$10")], {1: [web_path]})
+    products = product_parser.parse_products(
+        [(1, "Widget\n$10")],
+        {1: [web_path]},
+        {1: "/static/uploads/job789/pages/page_1.png"},
+    )
 
-    assert products[0].image_path == web_path
-    assert products[0].image_path.startswith("/static/uploads/")
+    assert products[0].image_url == web_path
+    assert products[0].image_url.startswith("/static/uploads/")
